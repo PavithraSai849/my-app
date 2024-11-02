@@ -1,6 +1,6 @@
 import axiosInstance from "@/api/axiosInstance";
 import { auth, db } from "@/firebase"; // Import initialized Firebase app
-import { collection, addDoc, getDoc, getDocs, doc, setDoc, updateDoc, query, where } from "firebase/firestore";
+import { collection, addDoc, getDoc, getDocs, doc, setDoc, updateDoc, query, where, orderBy } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
 
@@ -88,110 +88,59 @@ export async function checkAuthService() {
   return { success: false, data: null };
 }
 
-// export async function mediaUploadService(formData, onProgressCallback) {
-//   const file = formData.get('file');
-
-//   // Validate file size (in bytes)
-//   const maxFileSize = 10 * 1024 * 1024; // 10 MB
-//   if (file.size > maxFileSize) {
-//     alert("File size exceeds 10 MB. Please choose a smaller file.");
-//     return;
-//   }
-
-//   const { data } = await axiosInstance.post("/upload", formData, {
-//     onUploadProgress: (progressEvent) => {
-//       const percentCompleted = Math.round(
-//         (progressEvent.loaded * 100) / progressEvent.total
-//       );
-//       onProgressCallback(percentCompleted);
-//     },
-//   });
-
-//   return data;
-// }
-
-
-// export async function mediaBulkUploadService(formData, onProgressCallback) {
-//   const { data } = await axiosInstance.post("/media/bulk-upload", formData, {
-//     onUploadProgress: (progressEvent) => {
-//       const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-//       onProgressCallback(percentCompleted);
-//     },
-//   });
-//   return data;
-// }
-
-// export async function mediaDeleteService(id) {
-//   const { data } = await axiosInstance.delete(`/media/delete/${id}`);
-//   return data;
-// }
-
-// export async function fetchInstructorCourseListService() {
-//   try {
-//     const courseCollectionRef = collection(db, "courses");
-//     const courseSnapshot = await getDocs(courseCollectionRef);
-    
-//     // Map through each document snapshot and get its data
-//     const courses = courseSnapshot.docs.map((doc) => ({
-//       id: doc.id, // Include the document ID
-//       ...doc.data(), // Get the document data
-//     }));
-
-//     return { success: true, data: courses };
-//   } catch (error) {
-//     console.error("Error fetching course list:", error);
-//     return { success: false, message: "Failed to fetch course list" };
-//   }
-// }
-
 export async function mediaUploadService(formData, onProgressCallback) {
   const file = formData.get('file');
 
   // Validate file size (in bytes)
   const maxFileSize = 10 * 1024 * 1024; // 10 MB
   if (file.size > maxFileSize) {
-    console.error("File size exceeds 10 MB. Please choose a smaller file.");
-    return; // Or handle this case in a user-friendly way
+    alert("File size exceeds 10 MB. Please choose a smaller file.");
+    return;
   }
 
-  try {
-    const { data } = await axiosInstance.post("/upload", formData, {
-      onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        onProgressCallback(percentCompleted);
-      },
-    });
-    return data;
-  } catch (error) {
-    console.error("Error during file upload:", error);
-    throw error; // Rethrow or handle the error appropriately
-  }
+  const { data } = await axiosInstance.post("/media/upload", formData, {
+    onUploadProgress: (progressEvent) => {
+      const percentCompleted = Math.round(
+        (progressEvent.loaded * 100) / progressEvent.total
+      );
+      onProgressCallback(percentCompleted);
+    },
+  });
+
+  return data;
 }
 
+
 export async function mediaBulkUploadService(formData, onProgressCallback) {
-  try {
-    const { data } = await axiosInstance.post("/bulk-upload", formData, {
-      onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        onProgressCallback(percentCompleted);
-      },
-    });
-    return data;
-  } catch (error) {
-    console.error("Error during bulk upload:", error);
-    throw error; // Rethrow or handle the error appropriately
-  }
+  const { data } = await axiosInstance.post("/media/bulk-upload", formData, {
+    onUploadProgress: (progressEvent) => {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      onProgressCallback(percentCompleted);
+    },
+  });
+  return data;
 }
 
 export async function mediaDeleteService(id) {
+  const { data } = await axiosInstance.delete(`/media/delete/${id}`);
+  return data;
+}
+
+export async function fetchInstructorCourseListService() {
   try {
-    const { data } = await axiosInstance.delete(`/delete/${id}`);
-    return data;
+    const courseCollectionRef = collection(db, "courses");
+    const courseSnapshot = await getDocs(courseCollectionRef);
+    
+    // Map through each document snapshot and get its data
+    const courses = courseSnapshot.docs.map((doc) => ({
+      id: doc.id, // Include the document ID
+      ...doc.data(), // Get the document data
+    }));
+
+    return { success: true, data: courses };
   } catch (error) {
-    console.error("Error during media deletion:", error);
-    throw error; // Rethrow or handle the error appropriately
+    console.error("Error fetching course list:", error);
+    return { success: false, message: "Failed to fetch course list" };
   }
 }
 
@@ -248,19 +197,75 @@ export async function updateCourseByIdService(id, courseData) {
   }
 }
 
-export async function fetchStudentViewCourseListService(filters = {}) {
-  const coursesRef = collection(db, "courses");
+// export async function fetchStudentViewCourseListService(filters = {}) {
+//   console.log("Hey object");
+//   const coursesRef = collection(db, "courses");
+//   let queries = []; 
 
-  // Build the query with filters
-  const q = query(
-    coursesRef,
-    ...(filters?.category ? [where("category", "==", filters.category)] : []),
-    ...(filters?.level ? [where("level", "==", filters.level)] : [])
-  );
+//   const category = filters.get("category"); 
+//   const level = filters.get("level"); 
+//   const primaryLanguage = filters.get("primaryLanguage"); 
+
+//   if (category) {
+//     queries.push(where("category", "==", category));
+//   }
+
+//   if (level) {
+//     queries.push(where("level", "==", level));
+//   }
+  
+//   if (primaryLanguage) {
+//     queries.push(where("primaryLanguage", "==", primaryLanguage));
+//   }
+
+//   console.log("filters", filters);
+//   console.log("queries", queries);
+  
+//   const q = query(coursesRef, ...queries);
+//   console.log("q", q);
+
+//   const snapshot = await getDocs(q);
+//   const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+//   console.log("courses", courses);
+
+//   return { success: true, data: courses };
+// }
+
+
+export async function fetchStudentViewCourseListService(filters = {}) {
+  console.log("Hey object");
+  const coursesRef = collection(db, "courses");
+  let queries = []; 
+
+  // Extract each filter, allowing multiple values by splitting at commas
+  const category = filters.get("category")?.split(","); 
+  const level = filters.get("level")?.split(","); 
+  const primaryLanguage = filters.get("primaryLanguage")?.split(","); 
+
+  // Check if each filter has multiple values, and apply an "in" query
+  if (category && category.length > 0) {
+    queries.push(where("category", "in", category));
+  }
+
+  if (level && level.length > 0) {
+    queries.push(where("level", "in", level));
+  }
+  
+  if (primaryLanguage && primaryLanguage.length > 0) {
+    queries.push(where("primaryLanguage", "in", primaryLanguage));
+  }
+
+  console.log("filters", filters);
+  console.log("queries", queries);
+
+  // Create a combined query
+  const q = query(coursesRef, ...queries);
+  console.log("q", q);
 
   const snapshot = await getDocs(q);
   const courses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
+  console.log("courses", courses);
+
   return { success: true, data: courses };
 }
 
