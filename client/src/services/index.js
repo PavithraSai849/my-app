@@ -126,23 +126,23 @@ export async function checkAuthService() {
 //   return data;
 // }
 
-// export async function fetchInstructorCourseListService() {
-//   try {
-//     const courseCollectionRef = collection(db, "courses");
-//     const courseSnapshot = await getDocs(courseCollectionRef);
+export async function fetchInstructorCourseListService() {
+  try {
+    const courseCollectionRef = collection(db, "courses");
+    const courseSnapshot = await getDocs(courseCollectionRef);
     
-//     // Map through each document snapshot and get its data
-//     const courses = courseSnapshot.docs.map((doc) => ({
-//       id: doc.id, // Include the document ID
-//       ...doc.data(), // Get the document data
-//     }));
+    // Map through each document snapshot and get its data
+    const courses = courseSnapshot.docs.map((doc) => ({
+      id: doc.id, // Include the document ID
+      ...doc.data(), // Get the document data
+    }));
 
-//     return { success: true, data: courses };
-//   } catch (error) {
-//     console.error("Error fetching course list:", error);
-//     return { success: false, message: "Failed to fetch course list" };
-//   }
-// }
+    return { success: true, data: courses };
+  } catch (error) {
+    console.error("Error fetching course list:", error);
+    return { success: false, message: "Failed to fetch course list" };
+  }
+}
 
 export async function mediaUploadService(formData, onProgressCallback) {
   const file = formData.get('file');
